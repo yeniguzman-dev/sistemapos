@@ -1,50 +1,126 @@
+
 <!DOCTYPE html>
 <html lang="es">
 <head>
-<meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>Sistema POS</title>
-
-<!-- Manifest PWA -->
-<link rel="manifest" href="manifest.json">
-
-<!-- Estilos -->
-<link rel="stylesheet" href="style.css">
+  <meta charset="UTF-8">
+  <title>Sistema POS</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <link rel="stylesheet" href="style.css">
+  <link rel="manifest" href="manifest.json">
+  <meta name="theme-color" content="#007bff">
 </head>
 <body>
 
-<!-- LOGIN -->
-<div id="login" class="box">
-  <h2 style="text-align:center">Sistema POS</h2>
-  <input id="usuario" placeholder="Usuario">
-  <input id="clave" type="password" placeholder="Contraseña">
-  <button onclick="login()">Ingresar</button>
-</div>
-
-<!-- DASHBOARD -->
-<div id="dashboard" class="hidden">
-  <header>Sistema POS</header>
-  <button class="logout" onclick="cerrarSesion()">Cerrar sesión</button>
-  <div class="menu">
-    <div class="card" onclick="abrirInventario()">📦 Inventario</div>
-    <div class="card" onclick="abrirVentas()">🧾 Ventas</div>
-    <div class="card" onclick="abrirCajaVista()">💰 Caja</div>
-    <div class="card" onclick="abrirReportes()">📊 Reportes</div>
+  <!-- LOGIN -->
+  <div id="login" class="box">
+    <h2 style="text-align:center">Sistema POS</h2>
+    <input id="usuario" placeholder="Usuario">
+    <input id="clave" type="password" placeholder="Contraseña">
+    <button onclick="login()">Ingresar</button>
   </div>
-</div>
 
-<!-- Aquí van los otros divs: inventario, ventas, caja, ticket, reportes -->
-<!-- Mantén todo igual que tu código anterior -->
+  <!-- DASHBOARD -->
+  <div id="dashboard" class="hidden">
+    <header>Sistema POS</header>
+    <button class="logout" onclick="cerrarSesion()">Cerrar sesión</button>
+    <div class="menu">
+      <div class="card" onclick="abrirInventario()">📦 Inventario</div>
+      <div class="card" onclick="abrirVentas()">🧾 Ventas</div>
+      <div class="card" onclick="abrirCajaVista()">💰 Caja</div>
+      <div class="card" onclick="abrirReportes()">📊 Reportes</div>
+    </div>
+  </div>
 
-<!-- Scripts -->
-<script src="script.js"></script>
-<script>
-if ("serviceWorker" in navigator) {
-  navigator.serviceWorker.register("sw.js")
-    .then(() => console.log("Service Worker registrado"))
-    .catch(err => console.log("Error al registrar SW:", err));
-}
-</script>
+  <!-- INVENTARIO -->
+  <div id="inventario" class="hidden">
+    <header>Inventario <span style="float:right;cursor:pointer" onclick="volver()">⬅</span></header>
+    <div class="box">
+      <input id="nombre" placeholder="Producto">
+      <input id="precio" type="number" placeholder="Precio">
+      <input id="stock" type="number" placeholder="Stock">
+      <button onclick="agregarProducto()">Agregar</button>
+    </div>
+    <div class="box">
+      <h3>Lista de productos</h3>
+      <ul id="lista"></ul>
+    </div>
+  </div>
+
+  <!-- VENTAS -->
+  <div id="ventas" class="hidden">
+    <header>Ventas <span style="float:right;cursor:pointer" onclick="volverVentas()">⬅</span></header>
+    <div class="box">
+      <select id="productoVenta"></select>
+      <input id="cantidadVenta" type="number" placeholder="Cantidad" min="1">
+      <button onclick="agregarAlCarrito()">Agregar</button>
+    </div>
+    <div class="box">
+      <h3>Carrito</h3>
+      <ul id="carritoLista"></ul>
+      <p id="totalVenta">Total: $0</p>
+      <button onclick="finalizarVenta()">Cobrar</button>
+    </div>
+  </div>
+
+  <!-- CAJA -->
+  <div id="caja" class="hidden">
+    <header>Caja diaria <span style="float:right;cursor:pointer" onclick="volverACaja()">⬅</span></header>
+    <div class="box">
+      <p id="estadoCaja"></p>
+      <input id="montoApertura" type="number" placeholder="Monto apertura">
+      <button onclick="abrirCaja()">Abrir caja</button>
+      <hr style="margin:20px 0; border-color:#333">
+      <input id="montoCierre" type="number" placeholder="Monto cierre">
+      <button onclick="cerrarCaja()">Cerrar caja</button>
+    </div>
+  </div>
+
+  <!-- TICKET -->
+  <div id="ticket" class="hidden">
+    <div class="box">
+      <h3 style="text-align:center">Sistema POS</h3>
+      <p id="ticketFecha"></p>
+      <hr>
+      <ul id="ticketProductos"></ul>
+      <hr>
+      <p id="ticketTotal"></p>
+      <button onclick="descargarTicket()">📄 Guardar ticket</button>
+      <button onclick="cerrarTicket()">Cerrar</button>
+    </div>
+  </div>
+
+  <!-- REPORTES -->
+  <div id="reportes" class="hidden">
+    <header>Reporte diario <span style="float:right;cursor:pointer" onclick="volverReportes()">⬅</span></header>
+    <div class="box">
+      <h3>Resumen de caja</h3>
+      <p id="reporteActual"></p>
+      <div class="box">
+        <button onclick="descargarInformeDiario()">📄 Descargar informe diario</button>
+      </div>
+    </div>
+    <div class="resumen-dia">
+      <h3>📅 Resumen por día</h3>
+      <input type="date" id="fechaResumen">
+      <button onclick="verResumenPorDia()">Ver resumen</button>
+      <pre id="resultadoResumenDia"></pre>
+    </div>
+    <div class="box">
+      <div id="resumenDiario"></div>
+      <h3>Historial</h3>
+      <ul id="historialReportes"></ul>
+    </div>
+  </div>
+
+  <!-- SCRIPTS -->
+  <script src="script.js"></script>
+  <script>
+    if ("serviceWorker" in navigator) {
+      navigator.serviceWorker.register("sw.js")
+        .then(() => console.log("Service Worker registrado"))
+        .catch(err => console.log("Error SW:", err));
+    }
+  </script>
 
 </body>
 </html>
