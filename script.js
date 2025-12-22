@@ -1,4 +1,3 @@
-
 /* ===== USUARIOS ===== */
 const usuarios = [
   {usuario:"admin", clave:"1234"},
@@ -254,8 +253,18 @@ function cerrarSesion(){
 function fechaISO() { return new Date().toISOString().slice(0,10); }
 
 /* ===== SERVICE WORKER ===== */
-if ("serviceWorker" in navigator) {
-  navigator.serviceWorker.register("sw.js")
-    .then(() => console.log("Service Worker registrado"))
-    .catch(err => console.log("Error SW:", err));
+if ('serviceWorker' in navigator) {
+  navigator.serviceWorker.register('sw.js')
+    .then(reg => {
+      reg.onupdatefound = () => {
+        const newWorker = reg.installing;
+        newWorker.onstatechange = () => {
+          if (newWorker.state === 'installed' && navigator.serviceWorker.controller) {
+            alert('🔄 Nueva versión disponible. Recarga la página para actualizar.');
+          }
+        };
+      };
+      console.log("Service Worker registrado correctamente");
+    })
+    .catch(err => console.log('Error SW:', err));
 }
