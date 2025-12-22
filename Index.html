@@ -1,0 +1,698 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<title>Sistema POS</title>
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<style>
+body {
+  margin:0;
+  font-family: Arial, sans-serif;
+  background: #0f0f0f;
+  color: white;
+}
+.hidden { display: none; }
+.box {
+  max-width: 400px;
+  margin: 50px auto;
+  background: #1c1c1c;
+  padding: 25px;
+  border-radius: 10px;
+}
+input, select {
+  width: 100%;
+  padding: 12px;
+  margin: 10px 0;
+  border: none;
+  border-radius: 5px;
+  background: #2a2a2a;
+  color: white;
+}
+button {
+  width: 100%;
+  padding: 12px;
+  background: #007bff;
+  border: none;
+  border-radius: 5px;
+  color: white;
+  font-size: 16px;
+  cursor: pointer;
+}
+button.logout {
+  background: #ed1d24;
+  position: fixed;
+  top: 10px;
+  right: 10px;
+  width: auto;
+  padding: 8px 12px;
+  font-size: 12px;
+}
+header {
+  background: #1f1f1f;
+  padding: 15px;
+  text-align: center;
+  font-weight: bold;
+}
+.menu {
+  padding: 20px;
+  display: grid;
+  grid-template-columns: repeat(2, 1fr);
+  gap: 15px;
+}
+.card {
+  background: #1e1e1e;
+  padding: 20px;
+  border-radius: 10px;
+  text-align: center;
+  cursor: pointer;
+}
+ul { padding-left: 20px; }
+</style>
+</head>
+<body>
+
+<!-- LOGIN -->
+<div id="login" class="box">
+  <h2 style="text-align:center">Sistema POS</h2>
+  <input id="usuario" placeholder="Usuario">
+  <input id="clave" type="password" placeholder="Contraseña">
+  <button onclick="login()">Ingresar</button>
+</div>
+
+<!-- DASHBOARD -->
+<div id="dashboard" class="hidden">
+  <header>Sistema POS</header>
+  <button class="logout" onclick="cerrarSesion()">Cerrar sesión</button>
+  <div class="menu">
+    <div class="card" onclick="abrirInventario()">📦 Inventario</div>
+    <div class="card" onclick="abrirVentas()">🧾 Ventas</div>
+    <div class="card" onclick="abrirCajaVista()">💰 Caja</div>
+    <div class="card" onclick="abrirReportes()">📊 Reportes</div>
+  </div>
+</div>
+
+<!-- INVENTARIO -->
+<div id="inventario" class="hidden">
+  <header>Inventario <span style="float:right;cursor:pointer" onclick="volver()">⬅</span></header>
+  <div class="box">
+    <input id="nombre" placeholder="Producto">
+    <input id="precio" type="number" placeholder="Precio">
+    <input id="stock" type="number" placeholder="Stock">
+    <button onclick="agregarProducto()">Agregar</button>
+  </div>
+  <div class="box">
+    <h3>Lista de productos</h3>
+    <ul id="lista"></ul>
+  </div>
+</div>
+
+<!-- VENTAS -->
+<div id="ventas" class="hidden">
+  <header>Ventas <span style="float:right;cursor:pointer" onclick="volverVentas()">⬅</span></header>
+  <div class="box">
+    <select id="productoVenta"></select>
+    <input id="cantidadVenta" type="number" placeholder="Cantidad" min="1">
+    <button onclick="agregarAlCarrito()">Agregar</button>
+  </div>
+  <div class="box">
+    <h3>Carrito</h3>
+    <ul id="carritoLista"></ul>
+    <p id="totalVenta">Total: $0</p>
+    <button onclick="finalizarVenta()">Cobrar</button>
+  </div>
+</div>
+
+<!-- CAJA -->
+<div id="caja" class="hidden">
+  <header>Caja diaria <span style="float:right;cursor:pointer" onclick="volverACaja()">⬅</span></header>
+  <div class="box">
+    <p id="estadoCaja"></p>
+    <input id="montoApertura" type="number" placeholder="Monto apertura">
+    <button onclick="abrirCaja()">Abrir caja</button>
+    <hr style="margin:20px 0; border-color:#333">
+    <input id="montoCierre" type="number" placeholder="Monto cierre">
+    <button onclick="cerrarCaja()">Cerrar caja</button>
+  </div>
+</div>
+
+<!-- TICKET -->
+<div id="ticket" class="hidden">
+  <div class="box">
+    <h3 style="text-align:center">Sistema POS</h3>
+    <p id="ticketFecha"></p>
+    <hr>
+    <ul id="ticketProductos"></ul>
+    <hr>
+    <p id="ticketTotal"></p>
+    <button onclick="descargarTicket()">📄 Guardar ticket</button>
+    <button onclick="cerrarTicket()">Cerrar</button>
+  </div>
+</div>
+
+<!-- REPORTES -->
+<div id="reportes" class="hidden">
+  <header>Reporte diario <span style="float:right;cursor:pointer" onclick="volverReportes()">⬅</span></header>
+  <div class="box">
+    <h3>Resumen de caja</h3>
+    <p id="reporteActual"></p>
+    <div class="box">
+  <button onclick="descargarInformeDiario()">📄 Descargar informe diario</button>
+</div>
+  </div>
+  <div class="resumen-dia">
+  <h3>📅 Resumen por día</h3>
+
+  <input type="date" id="fechaResumen">
+  <button onclick="verResumenPorDia()">Ver resumen</button>
+
+  <pre id="resultadoResumenDia"></pre>
+</div>
+  <div class="box">
+    <div id="resumenDiario"></div>
+    <h3>Historial</h3>
+    <ul id="historialReportes"></ul>
+  </div>
+</div>
+
+<script type="text/javascript" src="https://cdn.emailjs.com/dist/email.min.js"></script>
+<script type="text/javascript">
+  (function(){
+    emailjs.init("cPt_5DykKNhLucioj"); // usa tu Public Key de EmailJS
+  })();
+</script>
+
+<script>
+/* ===== USUARIOS ===== */
+const usuarios = [
+  {usuario:"admin", clave:"1234"},
+  {usuario:"cajero", clave:"abcd"}
+];
+let usuarioActivo = null;
+
+/* ===== PRODUCTOS ===== */
+let productos = JSON.parse(localStorage.getItem("productos")) || [];
+
+/* ===== CAJA ===== */
+let caja = JSON.parse(localStorage.getItem("caja")) || {
+  abierta:false, apertura:0, ventas:0, cierre:0, fecha:""
+};
+let historialCierres = JSON.parse(localStorage.getItem("historialCierres")) || [];
+
+/* ===== HISTORIAL ===== */
+let historial = JSON.parse(localStorage.getItem("historialCaja")) || [];
+
+/* ===== CARRITO ===== */
+let carrito = [];
+let total = 0;
+
+/* ===== LOGIN ===== */
+function login(){
+  const u = document.getElementById("usuario").value.trim();
+  const p = document.getElementById("clave").value.trim();
+
+  const valido = usuarios.find(
+    user => user.usuario === u && user.clave === p
+  );
+
+  if(!valido){
+    alert("Usuario o contraseña incorrectos");
+    return;
+  }
+
+  usuarioActivo = valido.usuario;
+
+  document.getElementById("login").classList.add("hidden");
+  document.getElementById("dashboard").classList.remove("hidden");
+
+  actualizarEstadoCaja();
+}
+
+
+/* ===== INVENTARIO ===== */
+function abrirInventario(){ document.getElementById("dashboard").classList.add("hidden"); document.getElementById("inventario").classList.remove("hidden"); actualizarLista(); }
+function volver(){ document.getElementById("inventario").classList.add("hidden"); document.getElementById("dashboard").classList.remove("hidden"); }
+function agregarProducto(){
+  let nombre=document.getElementById("nombre").value;
+  let precio=document.getElementById("precio").value;
+  let stock=document.getElementById("stock").value;
+  if(!nombre||!precio||!stock){ alert("Completa todos los campos"); return; }
+  productos.push({nombre, precio, stock});
+  localStorage.setItem("productos", JSON.stringify(productos));
+  actualizarLista();
+  document.getElementById("nombre").value="";
+  document.getElementById("precio").value="";
+  document.getElementById("stock").value="";
+}
+function actualizarLista(){
+  let lista=document.getElementById("lista");
+  lista.innerHTML="";
+  productos.forEach(p=>{
+    let li=document.createElement("li");
+    li.textContent=`${p.nombre} - $${p.precio} - Stock: ${p.stock}`;
+    lista.appendChild(li);
+  });
+}
+
+/* ===== VENTAS ===== */
+function abrirVentas(){
+  if(!caja.abierta){ alert("Debes abrir la caja primero"); return; }
+  document.getElementById("dashboard").classList.add("hidden");
+  document.getElementById("ventas").classList.remove("hidden");
+  cargarProductosVenta();
+}
+function volverVentas(){ document.getElementById("ventas").classList.add("hidden"); document.getElementById("dashboard").classList.remove("hidden"); }
+function cargarProductosVenta(){
+  let select=document.getElementById("productoVenta"); select.innerHTML="";
+  productos.forEach((p,i)=>{
+    if(p.stock>0){
+      let option=document.createElement("option");
+      option.value=i;
+      option.textContent=`${p.nombre} - $${p.precio} (Stock ${p.stock})`;
+      select.appendChild(option);
+    }
+  });
+}
+function agregarAlCarrito(){
+  let index=document.getElementById("productoVenta").value;
+  let cantidad=Number(document.getElementById("cantidadVenta").value);
+  if(cantidad<=0){ alert("Cantidad inválida"); return; }
+  let producto=productos[index];
+  if(cantidad>producto.stock){ alert("No hay suficiente stock"); return; }
+  let subtotal=cantidad*producto.precio;
+  carrito.push({index,nombre:producto.nombre,cantidad,subtotal,usuario:usuarioActivo});
+  total+=subtotal;
+  mostrarCarrito();
+}
+function mostrarCarrito(){
+  let lista=document.getElementById("carritoLista");
+  lista.innerHTML="";
+  carrito.forEach(item=>{
+    let li=document.createElement("li");
+    li.textContent=`${item.nombre} x${item.cantidad} = $${item.subtotal}`;
+    lista.appendChild(li);
+  });
+  document.getElementById("totalVenta").textContent=`Total: $${total}`;
+}
+function finalizarVenta(){
+  if(carrito.length===0){ alert("Carrito vacío"); return; }
+  carrito.forEach(item=>{ productos[item.index].stock-=item.cantidad; });
+  caja.ventas+=total;
+  localStorage.setItem("productos", JSON.stringify(productos));
+  localStorage.setItem("caja", JSON.stringify(caja));
+  historial.push({fecha:new Date().toLocaleDateString(), usuario:usuarioActivo, ventas:total});
+  localStorage.setItem("historialCaja", JSON.stringify(historial));
+  mostrarTicket();
+  carrito=[]; total=0;
+  mostrarCarrito();
+  cargarProductosVenta();
+}
+
+/* ===== TICKET ===== */
+function mostrarTicket(){
+  document.getElementById("ventas").classList.add("hidden");
+  document.getElementById("ticket").classList.remove("hidden");
+  document.getElementById("ticketFecha").textContent="Fecha: "+new Date().toLocaleString();
+  let lista=document.getElementById("ticketProductos");
+  lista.innerHTML="";
+  carrito.forEach(item=>{
+    let li=document.createElement("li");
+    li.textContent=`${item.nombre} x${item.cantidad} = $${item.subtotal}`;
+    lista.appendChild(li);
+  });
+  document.getElementById("ticketTotal").textContent="TOTAL: $"+total;
+}
+function cerrarTicket(){
+  document.getElementById("ticket").classList.add("hidden");
+  document.getElementById("dashboard").classList.remove("hidden");
+}
+function descargarTicket(){
+    const ticketDiv = document.getElementById("ticket");
+    const ticketHtml = ticketDiv.cloneNode(true);
+    ticketHtml.querySelectorAll('button').forEach(btn => btn.remove());
+    const html = `
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<title>Ticket</title>
+<style>
+body { background: #0f0f0f; color: white; font-family: Arial, sans-serif; padding: 20px; }
+h3 { text-align: center; }
+ul { list-style-type: none; padding-left: 0; }
+</style>
+</head>
+<body>
+${ticketHtml.innerHTML}
+</body>
+</html>`;
+    const blob = new Blob([html], { type: 'text/html' });
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement('a');
+    a.href = url;
+    a.download = `Ticket_${new Date().toISOString().slice(0,10)}.html`;
+    document.body.appendChild(a);
+    a.click();
+    document.body.removeChild(a);
+    URL.revokeObjectURL(url);
+}
+
+/* ===== CAJA ===== */
+function actualizarEstadoCaja(){
+  const estado = document.getElementById("estadoCaja");
+  if(!estado) return;
+
+  if(caja.abierta){
+    estado.innerHTML = `
+      🟢 Caja ABIERTA<br>
+      💵 Apertura: $${caja.apertura}<br>
+      💰 Ventas: $${caja.ventas}
+    `;
+  } else {
+    estado.innerHTML = `
+      🔴 Caja CERRADA<br>
+      💰 Último cierre: $${caja.cierre || 0}
+    `;
+  }
+}
+function abrirCajaVista(){ document.getElementById("dashboard").classList.add("hidden"); document.getElementById("caja").classList.remove("hidden"); actualizarEstadoCaja(); }
+function volverACaja(){ document.getElementById("caja").classList.add("hidden"); document.getElementById("dashboard").classList.remove("hidden"); }
+function abrirCaja(){
+  let m=Number(document.getElementById("montoApertura").value);
+  if(!m){ alert("Ingresa monto de apertura"); return; }
+  caja.abierta=true; caja.apertura=m; caja.cierre=0; caja.fecha = fechaISO();
+  localStorage.setItem("caja",JSON.stringify(caja)); actualizarEstadoCaja();
+}
+caja.ventas = 0;
+localStorage.setItem("historialCaja", JSON.stringify([]));
+function cerrarCaja(){
+  if(!caja.abierta){ 
+    alert("La caja no está abierta"); 
+    return; 
+  }
+const hoy = fechaISO();
+const historial = JSON.parse(localStorage.getItem("historialCierres")) || [];
+
+const yaCerrado = historial.find(c => c.fecha === hoy);
+
+if (yaCerrado) {
+  alert("⚠️ La caja de hoy ya fue cerrada");
+  return;
+}
+  // Actualizar estado de la caja
+  caja.abierta = false; 
+  caja.cierre = caja.apertura + caja.ventas;
+  localStorage.setItem("caja", JSON.stringify(caja));
+  actualizarEstadoCaja();
+  const informe = generarInformeDiarioTexto();
+enviarWhatsAppCierreCaja(informe);
+  const datosCierre = {
+  fecha: caja.fecha,
+  hora: new Date().toLocaleTimeString(),
+  usuario: usuarioActivo,
+  ventas: caja.ventas,
+  cierre: caja.cierre
+};
+
+guardarHistorialCierre(datosCierre);
+
+  // Preparar datos para EmailJS según tu plantilla
+  const templateParams = {
+      nombre: "Sistema POS",
+      fecha: caja.fecha,
+      usuario: usuarioActivo,
+      ventas: caja.ventas,
+      cierre: caja.cierre
+  };
+console.log("📧 Enviando correo con estos datos:", templateParams);
+  // Enviar correo con EmailJS (ya no se necesita User ID, solo Public Key en init)
+  emailjs.send("service_ufdmans", "template_vomqwyo", templateParams)
+  .then(() => {
+  })
+  .catch((err) => {
+      console.error("Error al enviar correo:", err);
+      alert("Cierre de caja realizado pero no se pudo enviar el correo");
+  });
+
+  // Alerta local
+  alert(`Cierre de caja:\nFecha: ${caja.fecha}\nUsuario: ${usuarioActivo}\nVentas: $${caja.ventas}\nCierre: $${caja.cierre}`);
+}
+function enviarWhatsAppCierreCaja() {
+  const telefono = "573150013127"; // tu número con código país
+
+  const mensaje = `
+📊 *Sistema POS - Cierre de Caja*
+
+📅 Fecha: ${caja.fecha}
+⏰ Hora: ${new Date().toLocaleTimeString()}
+👤 Usuario: ${usuarioActivo}
+
+💰 Ventas del día: $${caja.ventas}
+💵 Total cierre: $${caja.cierre}
+
+✅ Cierre realizado correctamente
+  `.trim();
+
+  const url = `https://wa.me/${telefono}?text=${encodeURIComponent(mensaje)}`;
+  window.open(url, "_blank");
+}
+
+/* ===== REPORTES ===== */
+function abrirReportes(){ document.getElementById("dashboard").classList.add("hidden"); document.getElementById("reportes").classList.remove("hidden"); generarReporte(); }
+mostrarHistoricoCierres();
+mostrarResumenDiario();
+  mostrarHistoricoCierres();
+
+function volverReportes(){ document.getElementById("reportes").classList.add("hidden"); document.getElementById("dashboard").classList.remove("hidden"); }
+function generarReporte(){
+  let reporte=document.getElementById("reporteActual");
+  let lista=document.getElementById("historialReportes");
+  lista.innerHTML="";
+  if(caja.fecha){
+    reporte.innerHTML=`📅 Fecha: ${caja.fecha}<br>Estado: ${caja.abierta?"🟢 Abierta":"🔴 Cerrada"}<br>💵 Apertura: $${caja.apertura}<br>💰 Cierre: ${caja.cierre||"-"}<br>Usuario: ${usuarioActivo||"-"}`;
+  } else{ reporte.textContent="No hay datos de caja aún"; }
+  historial.forEach(h=>{
+    let li=document.createElement("li");
+    li.textContent=`📅 ${h.fecha} | Usuario: ${h.usuario||"-"} | Ventas: $${h.ventas||0}`;
+    lista.appendChild(li);
+  });
+}
+
+/* ===== CIERRE DE SESIÓN ===== */
+function cerrarSesion(){
+  // Si la caja está abierta, cerrarla antes de salir
+  if(caja.abierta){
+    cerrarCaja(); // Esto envía el correo automáticamente
+  }
+
+  usuarioActivo = null;
+  document.getElementById("dashboard").classList.add("hidden");
+  document.getElementById("inventario").classList.add("hidden");
+  document.getElementById("ventas").classList.add("hidden");
+  document.getElementById("caja").classList.add("hidden");
+  document.getElementById("reportes").classList.add("hidden");
+  document.getElementById("ticket").classList.add("hidden");
+  document.getElementById("login").classList.remove("hidden");
+}
+
+// Cierre automático por inactividad
+let tiempoInactividad = 5*60*1000; // 5 minutos
+let timerInactividad;
+function reiniciarTimer() {
+  clearTimeout(timerInactividad);
+  timerInactividad = setTimeout(cerrarSesion, tiempoInactividad);
+}
+document.addEventListener("mousemove", reiniciarTimer);
+document.addEventListener("keydown", reiniciarTimer);
+document.addEventListener("click", reiniciarTimer);
+document.addEventListener("touchstart", reiniciarTimer);
+
+function generarInforme() {
+    let informe = `
+Sistema POS - Informe Diario de Ventas
+Fecha: ${caja.fecha}
+Usuario que cerró la caja: ${usuarioActivo}
+Ventas totales: $${caja.ventas}
+Cierre de caja: $${caja.cierre}
+
+Detalle de ventas por usuario:
+`;
+
+    historial.forEach(h => {
+        informe += `\n- ${h.fecha} | Usuario: ${h.usuario || "-"} | Ventas: $${h.ventas || 0}`;
+    });
+
+    return informe;
+}
+function guardarHistorialCierre(datosCierre) {
+  let historial = JSON.parse(localStorage.getItem("historialCierres")) || [];
+
+  historial.push(datosCierre);
+
+  localStorage.setItem("historialCierres", JSON.stringify(historial));
+}
+actualizarEstadoCaja();
+
+function descargarInformeDiario() {
+  const historialCierres = JSON.parse(localStorage.getItem("historialCierres")) || [];
+
+  if (historialCierres.length === 0) {
+    alert("No hay cierres registrados");
+    return;
+  }
+
+  const ultimo = historialCierres[historialCierres.length - 1];
+
+  const html = `
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<title>Informe Diario</title>
+<style>
+body {
+  font-family: Arial, sans-serif;
+  background: #0f0f0f;
+  color: white;
+  padding: 20px;
+}
+h2 { text-align: center; }
+</style>
+<link rel="manifest" href="manifest.json">
+<meta name="theme-color" content="#007bff">
+</head>
+<body>
+
+<h2>📊 Sistema POS - Informe Diario</h2>
+
+<p><strong>Fecha:</strong> ${ultimo.fecha}</p>
+<p><strong>Hora:</strong> ${ultimo.hora}</p>
+<p><strong>Usuario:</strong> ${ultimo.usuario}</p>
+<p><strong>Ventas del día:</strong> $${ultimo.ventas}</p>
+<p><strong>Total cierre:</strong> $${ultimo.cierre}</p>
+
+</body>
+</html>
+`;
+
+  const blob = new Blob([html], { type: "text/html" });
+  const url = URL.createObjectURL(blob);
+
+  const a = document.createElement("a");
+  a.href = url;
+  a.download = `Informe_${ultimo.fecha}.html`;
+  document.body.appendChild(a);
+  a.click();
+  document.body.removeChild(a);
+  URL.revokeObjectURL(url);
+}
+
+function mostrarHistoricoCierres() {
+  const lista = document.getElementById("historialReportes");
+  lista.innerHTML = "";
+
+  const historial = JSON.parse(localStorage.getItem("historialCierres")) || [];
+
+  if (historial.length === 0) {
+    const li = document.createElement("li");
+    li.textContent = "No hay cierres registrados";
+    lista.appendChild(li);
+    return;
+  }
+
+  historial.forEach(cierre => {
+    const li = document.createElement("li");
+    li.innerHTML = `
+      📅 ${cierre.fecha} ${cierre.hora}<br>
+      👤 Usuario: ${cierre.usuario}<br>
+      💰 Ventas: $${cierre.ventas}<br>
+      💵 Cierre: $${cierre.cierre}
+      <hr>
+    `;
+    lista.appendChild(li);
+  });
+}
+function mostrarResumenDiario() {
+  const contenedor = document.getElementById("resumenDiario");
+  contenedor.innerHTML = "";
+
+  const historial = JSON.parse(localStorage.getItem("historialCierres")) || [];
+
+  if (historial.length === 0) {
+    contenedor.textContent = "No hay datos para mostrar";
+    return;
+  }
+
+  let totalVentas = 0;
+  let totalCierre = 0;
+
+  historial.forEach(cierre => {
+    totalVentas += Number(cierre.ventas);
+    totalCierre += Number(cierre.cierre);
+  });
+
+  contenedor.innerHTML = `
+    📅 Resumen general<br>
+    📦 Cierres realizados: ${historial.length}<br>
+    💰 Total ventas: $${totalVentas}<br>
+    💵 Total cierre: $${totalCierre}
+  `;
+}
+function verResumenPorDia() {
+  const fechaSeleccionada = document.getElementById("fechaResumen").value;
+  const resultado = document.getElementById("resultadoResumenDia");
+
+  if (!fechaSeleccionada) {
+    resultado.textContent = "⚠️ Selecciona una fecha";
+    return;
+  }
+
+  const historial = JSON.parse(localStorage.getItem("historialCierres")) || [];
+
+  const cierresDelDia = historial.filter(c =>
+    c.fecha === fechaSeleccionada
+  );
+
+  if (cierresDelDia.length === 0) {
+    resultado.textContent = "❌ No hay cierres para ese día";
+    return;
+  }
+
+  let totalVentas = 0;
+
+  cierresDelDia.forEach(c => {
+    totalVentas += Number(c.ventas || 0);
+  });
+
+  resultado.textContent =
+    `📅 Fecha: ${fechaSeleccionada}
+🧾 Cierres: ${cierresDelDia.length}
+💰 Total vendido: $${totalVentas}`;
+}
+function fechaISO() {
+  return new Date().toISOString().slice(0,10);
+}
+actualizarEstadoCaja();
+function generarInformeDiarioTexto() {
+  return `
+📊 *INFORME DIARIO - SISTEMA POS*
+
+📅 Fecha: ${caja.fecha}
+👤 Usuario: ${usuarioActivo}
+
+💰 Ventas del día: $${caja.ventas}
+💵 Total cierre: $${caja.cierre}
+
+📦 Cierres registrados correctamente
+  `.trim();
+}
+<script>
+if ("serviceWorker" in navigator) {
+  navigator.serviceWorker.register("sw.js")
+    .then(() => console.log("Service Worker registrado"))
+    .catch(err => console.log("Error SW:", err));
+}
+</script>
+</script>
+
+</body>
+</html>
