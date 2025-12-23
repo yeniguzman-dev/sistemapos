@@ -1,4 +1,3 @@
-
 /* ===== USUARIOS ===== */
 const usuarios = [
   {usuario:"admin", clave:"1234"},
@@ -264,10 +263,8 @@ function mostrarReporteDiario() {
   });
 }
 
-function function abrirReportes() {
-  alert("Funciona el botón de reportes");
-} {
-  ction ab.irReporte {yId("dashboard").classList.add("hidden");
+function abrirReportes() {
+  document.getElementById("dashboard").classList.add("hidden");
   document.getElementById("reportes").classList.remove("hidden");
   mostrarReporteDiario();
 }
@@ -361,4 +358,4 @@ if ('serviceWorker' in navigator) {
       console.log("Service Worker registrado correctamente");
     })
     .catch(err => console.log('Error SW:', err));
-}
+
