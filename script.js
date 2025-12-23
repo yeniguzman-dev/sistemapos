@@ -1,3 +1,4 @@
+
 /* ===== USUARIOS ===== */
 const usuarios = [
   {usuario:"admin", clave:"1234"},
@@ -34,10 +35,8 @@ function login(){
   }
 
   usuarioActivo = valido.usuario;
-
   document.getElementById("login").classList.add("hidden");
   document.getElementById("dashboard").classList.remove("hidden");
-
   actualizarEstadoCaja();
 }
 
@@ -53,8 +52,8 @@ function volver(){
 }
 function agregarProducto(){
   let nombre=document.getElementById("nombre").value;
-  let precio=document.getElementById("precio").value;
-  let stock=document.getElementById("stock").value;
+  let precio=Number(document.getElementById("precio").value);
+  let stock=Number(document.getElementById("stock").value);
   if(!nombre||!precio||!stock){ alert("Completa todos los campos"); return; }
   productos.push({nombre, precio, stock});
   localStorage.setItem("productos", JSON.stringify(productos));
@@ -215,7 +214,6 @@ function abrirCaja(){
 function cerrarCaja(){
   if(!caja.abierta){ alert("La caja no está abierta"); return; }
   const hoy = fechaISO();
-  const historialCierres = JSON.parse(localStorage.getItem("historialCierres")) || [];
   const yaCerrado = historialCierres.find(c => c.fecha === hoy);
   if (yaCerrado) { alert("⚠️ La caja de hoy ya fue cerrada"); return; }
 
@@ -237,28 +235,9 @@ function cerrarCaja(){
   alert(`Cierre de caja:\nFecha: ${caja.fecha}\nUsuario: ${usuarioActivo}\nVentas: $${caja.ventas}\nCierre: $${caja.cierre}`);
 }
 
-/* ===== CIERRE DE SESIÓN ===== */
-function cerrarSesion(){
-  usuarioActivo = null;
-  document.getElementById("dashboard").classList.add("hidden");
-  document.getElementById("inventario").classList.add("hidden");
-  document.getElementById("ventas").classList.add("hidden");
-  document.getElementById("caja").classList.add("hidden");
-  document.getElementById("reportes").classList.add("hidden");
-  document.getElementById("ticket").classList.add("hidden");
-  document.getElementById("login").classList.remove("hidden");
-}
-
-/* ===== UTILS ===== */
-function fechaISO() { return new Date().toISOString().slice(0,10); }
-
 /* ===== REPORTES ===== */
-
-// Mostrar resumen diario al abrir la sección de reportes
 function mostrarReporteDiario() {
-  const hoy = fechaISO(); // Obtener fecha actual en formato YYYY-MM-DD
-
-  // Filtrar ventas del día
+  const hoy = fechaISO();
   const ventasHoy = historial.filter(h => h.fecha === hoy);
 
   if (ventasHoy.length === 0) {
@@ -267,21 +246,17 @@ function mostrarReporteDiario() {
     return;
   }
 
-  // Resumen rápido
   let totalVentas = ventasHoy.reduce((sum, v) => sum + v.ventas, 0);
   document.getElementById("reporteActual").textContent = `Ventas totales hoy: $${totalVentas}`;
 
-  // Resumen detallado
   let detalle = "Detalle de ventas:\n";
   ventasHoy.forEach(v => {
     detalle += `Usuario: ${v.usuario} - Ventas: $${v.ventas}\n`;
   });
   document.getElementById("resumenDiario").textContent = detalle;
 
-  // Llenar historial en la lista
   const historialUl = document.getElementById("historialReportes");
   historialUl.innerHTML = "";
-  const historialCierres = JSON.parse(localStorage.getItem("historialCierres")) || [];
   historialCierres.forEach(c => {
     let li = document.createElement("li");
     li.textContent = `Fecha: ${c.fecha} - Usuario: ${c.usuario} - Ventas: $${c.ventas} - Cierre: $${c.cierre}`;
@@ -289,11 +264,10 @@ function mostrarReporteDiario() {
   });
 }
 
-// Funciones para abrir y cerrar la sección de reportes
 function abrirReportes() {
   document.getElementById("dashboard").classList.add("hidden");
   document.getElementById("reportes").classList.remove("hidden");
-  mostrarReporteDiario(); // Llama automáticamente al mostrar reportes
+  mostrarReporteDiario();
 }
 
 function volverReportes() {
@@ -301,21 +275,16 @@ function volverReportes() {
   document.getElementById("dashboard").classList.remove("hidden");
 }
 
-// Descargar informe diario completo
 function descargarInformeDiario() {
   const hoy = fechaISO();
   const ventasHoy = historial.filter(h => h.fecha === hoy);
-  const historialCierres = JSON.parse(localStorage.getItem("historialCierres")) || [];
 
   if (ventasHoy.length === 0) {
     alert("No hay ventas registradas hoy");
     return;
   }
 
-  // Crear contenido del reporte
   let contenido = `Reporte diario - ${hoy}\n\n`;
-
-  // Ventas del día
   let totalVentas = 0;
   ventasHoy.forEach(v => {
     contenido += `Usuario: ${v.usuario} - Ventas: $${v.ventas}\n`;
@@ -323,13 +292,11 @@ function descargarInformeDiario() {
   });
   contenido += `\nTotal ventas del día: $${totalVentas}\n\n`;
 
-  // Historial de cierres
   contenido += "Historial de cierres:\n";
   historialCierres.forEach(c => {
     contenido += `Fecha: ${c.fecha} - Usuario: ${c.usuario} - Ventas: $${c.ventas} - Cierre: $${c.cierre}\n`;
   });
 
-  // Descargar archivo
   const blob = new Blob([contenido], { type: "text/plain" });
   const url = URL.createObjectURL(blob);
   const a = document.createElement("a");
@@ -341,7 +308,6 @@ function descargarInformeDiario() {
   URL.revokeObjectURL(url);
 }
 
-// Ver resumen por día
 function verResumenPorDia() {
   const fecha = document.getElementById("fechaResumen").value;
   if (!fecha) { alert("Selecciona una fecha"); return; }
@@ -363,6 +329,21 @@ function verResumenPorDia() {
   document.getElementById("resultadoResumenDia").textContent = resumen;
 }
 
+/* ===== CIERRE DE SESIÓN ===== */
+function cerrarSesion(){
+  usuarioActivo = null;
+  document.getElementById("dashboard").classList.add("hidden");
+  document.getElementById("inventario").classList.add("hidden");
+  document.getElementById("ventas").classList.add("hidden");
+  document.getElementById("caja").classList.add("hidden");
+  document.getElementById("reportes").classList.add("hidden");
+  document.getElementById("ticket").classList.add("hidden");
+  document.getElementById("login").classList.remove("hidden");
+}
+
+/* ===== UTILS ===== */
+function fechaISO() { return new Date().toISOString().slice(0,10); }
+
 /* ===== SERVICE WORKER ===== */
 if ('serviceWorker' in navigator) {
   navigator.serviceWorker.register('sw.js')
@@ -378,4 +359,4 @@ if ('serviceWorker' in navigator) {
       console.log("Service Worker registrado correctamente");
     })
     .catch(err => console.log('Error SW:', err));
-    }
+}
