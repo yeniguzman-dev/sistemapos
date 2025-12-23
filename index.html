@@ -88,28 +88,38 @@
     </div>
   </div>
 
-  <!-- REPORTES -->
-  <div id="reportes" class="hidden">
-    <header>Reporte diario <span style="float:right;cursor:pointer" onclick="volverReportes()">⬅</span></header>
+<!-- BOTÓN PARA ABRIR REPORTES -->
+<button onclick="abrirReportes()">📊 Abrir reportes</button>
+
+<!-- REPORTES -->
+<div id="reportes" class="hidden">
+  <header>
+    Reporte diario
+    <span style="float:right; cursor:pointer" onclick="volverReportes()">⬅</span>
+  </header>
+
+  <div class="box">
+    <h3>Resumen de caja</h3>
+    <p id="reporteActual"></p> <!-- Resumen rápido de ventas del día -->
+
     <div class="box">
-      <h3>Resumen de caja</h3>
-      <p id="reporteActual"></p>
-      <div class="box">
-        <button onclick="descargarInformeDiario()">📄 Descargar informe diario</button>
-      </div>
-    </div>
-    <div class="resumen-dia">
-      <h3>📅 Resumen por día</h3>
-      <input type="date" id="fechaResumen">
-      <button onclick="verResumenPorDia()">Ver resumen</button>
-      <pre id="resultadoResumenDia"></pre>
-    </div>
-    <div class="box">
-      <div id="resumenDiario"></div>
-      <h3>Historial</h3>
-      <ul id="historialReportes"></ul>
+      <button onclick="descargarInformeDiario()">📄 Descargar informe diario</button>
     </div>
   </div>
+
+  <div class="resumen-dia">
+    <h3>📅 Resumen por día</h3>
+    <input type="date" id="fechaResumen">
+    <button onclick="verResumenPorDia()">Ver resumen</button>
+    <pre id="resultadoResumenDia"></pre>
+  </div>
+
+  <div class="box">
+    <div id="resumenDiario"></div> <!-- Detalle de ventas del día -->
+    <h3>Historial</h3>
+    <ul id="historialReportes"></ul> <!-- Lista de cierres -->
+  </div>
+</div>
 
   <!-- SCRIPTS -->
   <script src="script.js"></script>
