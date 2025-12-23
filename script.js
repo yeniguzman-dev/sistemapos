@@ -364,3 +364,46 @@ if ('serviceWorker' in navigator) {
     })
     .catch(err => console.log('Error SW:', err));
 }
+function enviarReporteWhatsApp() {
+  const hoy = fechaISO();
+  const ventasHoy = historial.filter(h => h.fecha === hoy);
+
+  if (ventasHoy.length === 0) {
+    console.log("No hay ventas hoy para enviar a WhatsApp");
+    return;
+  }
+
+  let mensaje = `Reporte diario - ${hoy}\n\n`;
+  let totalVentas = 0;
+  ventasHoy.forEach(v => {
+    mensaje += `Usuario: ${v.usuario} - Ventas: $${v.ventas}\n`;
+    totalVentas += v.ventas;
+  });
+  mensaje += `\nTotal ventas del día: $${totalVentas}`;
+
+  // Historial de cierres
+  historialCierres.forEach(c => {
+    mensaje += `\nCierre: ${c.fecha} - Usuario: ${c.usuario} - Ventas: $${c.ventas} - Total: $${c.cierre}`;
+  });
+
+  // Codificar el mensaje para URL
+  const textoURL = encodeURIComponent(mensaje);
+
+  // Número de WhatsApp (ejemplo: +573001234567)
+  const numeroWhatsApp = "573001234567";
+
+  // Abrir WhatsApp con el mensaje
+  const url = `https://wa.me/${numeroWhatsApp}?text=${textoURL}`;
+  window.open(url, "_blank");
+}
+function programarEnvioWhatsApp() {
+  setInterval(() => {
+    const ahora = new Date();
+    if (ahora.getHours() === 20 && ahora.getMinutes() === 0) {
+      enviarReporteWhatsApp();
+    }
+  }, 60000); // Revisa cada minuto
+}
+window.onload = () => {
+  programarEnvioWhatsApp();
+};
