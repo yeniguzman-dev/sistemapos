@@ -264,8 +264,10 @@ function mostrarReporteDiario() {
   });
 }
 
-function abrirReportes() {
-  document.getElementById("dashboard").classList.add("hidden");
+function function abrirReportes() {
+  alert("Funciona el botón de reportes");
+} {
+  ction ab.irReporte {yId("dashboard").classList.add("hidden");
   document.getElementById("reportes").classList.remove("hidden");
   mostrarReporteDiario();
 }
