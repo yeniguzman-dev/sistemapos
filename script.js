@@ -252,6 +252,117 @@ function cerrarSesion(){
 /* ===== UTILS ===== */
 function fechaISO() { return new Date().toISOString().slice(0,10); }
 
+/* ===== REPORTES ===== */
+
+// Mostrar resumen diario al abrir la sección de reportes
+function mostrarReporteDiario() {
+  const hoy = fechaISO(); // Obtener fecha actual en formato YYYY-MM-DD
+
+  // Filtrar ventas del día
+  const ventasHoy = historial.filter(h => h.fecha === hoy);
+
+  if (ventasHoy.length === 0) {
+    document.getElementById("reporteActual").textContent = "No hay ventas registradas hoy";
+    document.getElementById("resumenDiario").textContent = "";
+    return;
+  }
+
+  // Resumen rápido
+  let totalVentas = ventasHoy.reduce((sum, v) => sum + v.ventas, 0);
+  document.getElementById("reporteActual").textContent = `Ventas totales hoy: $${totalVentas}`;
+
+  // Resumen detallado
+  let detalle = "Detalle de ventas:\n";
+  ventasHoy.forEach(v => {
+    detalle += `Usuario: ${v.usuario} - Ventas: $${v.ventas}\n`;
+  });
+  document.getElementById("resumenDiario").textContent = detalle;
+
+  // Llenar historial en la lista
+  const historialUl = document.getElementById("historialReportes");
+  historialUl.innerHTML = "";
+  const historialCierres = JSON.parse(localStorage.getItem("historialCierres")) || [];
+  historialCierres.forEach(c => {
+    let li = document.createElement("li");
+    li.textContent = `Fecha: ${c.fecha} - Usuario: ${c.usuario} - Ventas: $${c.ventas} - Cierre: $${c.cierre}`;
+    historialUl.appendChild(li);
+  });
+}
+
+// Funciones para abrir y cerrar la sección de reportes
+function abrirReportes() {
+  document.getElementById("dashboard").classList.add("hidden");
+  document.getElementById("reportes").classList.remove("hidden");
+  mostrarReporteDiario(); // Llama automáticamente al mostrar reportes
+}
+
+function volverReportes() {
+  document.getElementById("reportes").classList.add("hidden");
+  document.getElementById("dashboard").classList.remove("hidden");
+}
+
+// Descargar informe diario completo
+function descargarInformeDiario() {
+  const hoy = fechaISO();
+  const ventasHoy = historial.filter(h => h.fecha === hoy);
+  const historialCierres = JSON.parse(localStorage.getItem("historialCierres")) || [];
+
+  if (ventasHoy.length === 0) {
+    alert("No hay ventas registradas hoy");
+    return;
+  }
+
+  // Crear contenido del reporte
+  let contenido = `Reporte diario - ${hoy}\n\n`;
+
+  // Ventas del día
+  let totalVentas = 0;
+  ventasHoy.forEach(v => {
+    contenido += `Usuario: ${v.usuario} - Ventas: $${v.ventas}\n`;
+    totalVentas += v.ventas;
+  });
+  contenido += `\nTotal ventas del día: $${totalVentas}\n\n`;
+
+  // Historial de cierres
+  contenido += "Historial de cierres:\n";
+  historialCierres.forEach(c => {
+    contenido += `Fecha: ${c.fecha} - Usuario: ${c.usuario} - Ventas: $${c.ventas} - Cierre: $${c.cierre}\n`;
+  });
+
+  // Descargar archivo
+  const blob = new Blob([contenido], { type: "text/plain" });
+  const url = URL.createObjectURL(blob);
+  const a = document.createElement("a");
+  a.href = url;
+  a.download = `InformeDiario_${hoy}.txt`;
+  document.body.appendChild(a);
+  a.click();
+  document.body.removeChild(a);
+  URL.revokeObjectURL(url);
+}
+
+// Ver resumen por día
+function verResumenPorDia() {
+  const fecha = document.getElementById("fechaResumen").value;
+  if (!fecha) { alert("Selecciona una fecha"); return; }
+
+  const ventasDia = historial.filter(h => h.fecha === fecha);
+  if (ventasDia.length === 0) {
+    document.getElementById("resultadoResumenDia").textContent = "No hay ventas registradas";
+    return;
+  }
+
+  let resumen = `Resumen de ventas - ${fecha}\n\n`;
+  let total = 0;
+  ventasDia.forEach(v => {
+    resumen += `Usuario: ${v.usuario} - Ventas: $${v.ventas}\n`;
+    total += v.ventas;
+  });
+  resumen += `\nTotal ventas: $${total}`;
+
+  document.getElementById("resultadoResumenDia").textContent = resumen;
+}
+
 /* ===== SERVICE WORKER ===== */
 if ('serviceWorker' in navigator) {
   navigator.serviceWorker.register('sw.js')
@@ -267,4 +378,4 @@ if ('serviceWorker' in navigator) {
       console.log("Service Worker registrado correctamente");
     })
     .catch(err => console.log('Error SW:', err));
-}
+    }
