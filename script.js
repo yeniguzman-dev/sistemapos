@@ -1,7 +1,7 @@
 /* ===== USUARIOS ===== */
 const usuarios = [
-  {usuario:"admin", clave:"1234"},
-  {usuario:"cajero", clave:"abcd"}
+  { usuario: "admin", clave: "1234" },
+  { usuario: "cajero", clave: "abcd" }
 ];
 let usuarioActivo = null;
 
@@ -10,7 +10,7 @@ let productos = JSON.parse(localStorage.getItem("productos")) || [];
 
 /* ===== CAJA ===== */
 let caja = JSON.parse(localStorage.getItem("caja")) || {
-  abierta:false, apertura:0, ventas:0, cierre:0, fecha:""
+  abierta: false, apertura: 0, ventas: 0, cierre: 0, fecha: ""
 };
 let historialCierres = JSON.parse(localStorage.getItem("historialCierres")) || [];
 
@@ -22,13 +22,12 @@ let carrito = [];
 let total = 0;
 
 /* ===== LOGIN ===== */
-function login(){
+function login() {
   const u = document.getElementById("usuario").value;
   const p = document.getElementById("clave").value;
 
   const valido = usuarios.find(user => user.usuario === u && user.clave === p);
-
-  if(!valido){ 
+  if (!valido) { 
     alert("Usuario o contraseña incorrectos"); 
     return; 
   }
@@ -40,116 +39,126 @@ function login(){
 }
 
 /* ===== INVENTARIO ===== */
-function abrirInventario(){ 
+function abrirInventario() { 
   document.getElementById("dashboard").classList.add("hidden"); 
   document.getElementById("inventario").classList.remove("hidden"); 
   actualizarLista(); 
 }
-function volver(){ 
+function volver() { 
   document.getElementById("inventario").classList.add("hidden"); 
   document.getElementById("dashboard").classList.remove("hidden"); 
 }
-function agregarProducto(){
-  let nombre=document.getElementById("nombre").value;
-  let precio=Number(document.getElementById("precio").value);
-  let stock=Number(document.getElementById("stock").value);
-  if(!nombre||!precio||!stock){ alert("Completa todos los campos"); return; }
-  productos.push({nombre, precio, stock});
+function agregarProducto() {
+  let nombre = document.getElementById("nombre").value;
+  let precio = Number(document.getElementById("precio").value);
+  let stock = Number(document.getElementById("stock").value);
+  if (!nombre || !precio || !stock) { alert("Completa todos los campos"); return; }
+
+  productos.push({ nombre, precio, stock });
   localStorage.setItem("productos", JSON.stringify(productos));
   actualizarLista();
-  document.getElementById("nombre").value="";
-  document.getElementById("precio").value="";
-  document.getElementById("stock").value="";
+
+  document.getElementById("nombre").value = "";
+  document.getElementById("precio").value = "";
+  document.getElementById("stock").value = "";
 }
-function actualizarLista(){
-  let lista=document.getElementById("lista");
-  lista.innerHTML="";
-  productos.forEach(p=>{
-    let li=document.createElement("li");
-    li.textContent=`${p.nombre} - $${p.precio} - Stock: ${p.stock}`;
+function actualizarLista() {
+  let lista = document.getElementById("lista");
+  lista.innerHTML = "";
+  productos.forEach(p => {
+    let li = document.createElement("li");
+    li.textContent = `${p.nombre} - $${p.precio} - Stock: ${p.stock}`;
     lista.appendChild(li);
   });
 }
 
 /* ===== VENTAS ===== */
-function abrirVentas(){
-  if(!caja.abierta){ alert("Debes abrir la caja primero"); return; }
+function abrirVentas() {
+  if (!caja.abierta) { alert("Debes abrir la caja primero"); return; }
   document.getElementById("dashboard").classList.add("hidden");
   document.getElementById("ventas").classList.remove("hidden");
   cargarProductosVenta();
 }
-function volverVentas(){ 
+function volverVentas() { 
   document.getElementById("ventas").classList.add("hidden"); 
   document.getElementById("dashboard").classList.remove("hidden"); 
 }
-function cargarProductosVenta(){
-  let select=document.getElementById("productoVenta"); select.innerHTML="";
-  productos.forEach((p,i)=>{
-    if(p.stock>0){
-      let option=document.createElement("option");
-      option.value=i;
-      option.textContent=`${p.nombre} - $${p.precio} (Stock ${p.stock})`;
+function cargarProductosVenta() {
+  let select = document.getElementById("productoVenta"); 
+  select.innerHTML = "";
+  productos.forEach((p, i) => {
+    if (p.stock > 0) {
+      let option = document.createElement("option");
+      option.value = i;
+      option.textContent = `${p.nombre} - $${p.precio} (Stock ${p.stock})`;
       select.appendChild(option);
     }
   });
 }
-function agregarAlCarrito(){
-  let index=document.getElementById("productoVenta").value;
-  let cantidad=Number(document.getElementById("cantidadVenta").value);
-  if(cantidad<=0){ alert("Cantidad inválida"); return; }
-  let producto=productos[index];
-  if(cantidad>producto.stock){ alert("No hay suficiente stock"); return; }
-  let subtotal=cantidad*producto.precio;
-  carrito.push({index,nombre:producto.nombre,cantidad,subtotal,usuario:usuarioActivo});
-  total+=subtotal;
+function agregarAlCarrito() {
+  let index = document.getElementById("productoVenta").value;
+  let cantidad = Number(document.getElementById("cantidadVenta").value);
+  if (cantidad <= 0) { alert("Cantidad inválida"); return; }
+  let producto = productos[index];
+  if (cantidad > producto.stock) { alert("No hay suficiente stock"); return; }
+
+  let subtotal = cantidad * producto.precio;
+  carrito.push({ index, nombre: producto.nombre, cantidad, subtotal, usuario: usuarioActivo });
+  total += subtotal;
   mostrarCarrito();
 }
-function mostrarCarrito(){
-  let lista=document.getElementById("carritoLista");
-  lista.innerHTML="";
-  carrito.forEach(item=>{
-    let li=document.createElement("li");
-    li.textContent=`${item.nombre} x${item.cantidad} = $${item.subtotal}`;
+function mostrarCarrito() {
+  let lista = document.getElementById("carritoLista");
+  lista.innerHTML = "";
+  carrito.forEach(item => {
+    let li = document.createElement("li");
+    li.textContent = `${item.nombre} x${item.cantidad} = $${item.subtotal}`;
     lista.appendChild(li);
   });
-  document.getElementById("totalVenta").textContent=`Total: $${total}`;
+  document.getElementById("totalVenta").textContent = `Total: $${total}`;
 }
-function finalizarVenta(){
-  if(carrito.length===0){ alert("Carrito vacío"); return; }
-  carrito.forEach(item=>{ productos[item.index].stock-=item.cantidad; });
-  caja.ventas+=total;
+function finalizarVenta() {
+  if (carrito.length === 0) { alert("Carrito vacío"); return; }
+  carrito.forEach(item => { productos[item.index].stock -= item.cantidad; });
+  caja.ventas += total;
+
   localStorage.setItem("productos", JSON.stringify(productos));
   localStorage.setItem("caja", JSON.stringify(caja));
-  historial.push({fecha:new Date().toLocaleDateString(), usuario:usuarioActivo, ventas:total});
+
+  historial.push({ fecha: new Date().toLocaleDateString(), usuario: usuarioActivo, ventas: total });
   localStorage.setItem("historialCaja", JSON.stringify(historial));
+
   mostrarTicket();
-  carrito=[]; total=0;
+  carrito = []; total = 0;
   mostrarCarrito();
   cargarProductosVenta();
 }
 
 /* ===== TICKET ===== */
-function mostrarTicket(){
+function mostrarTicket() {
   document.getElementById("ventas").classList.add("hidden");
   document.getElementById("ticket").classList.remove("hidden");
-  document.getElementById("ticketFecha").textContent="Fecha: "+new Date().toLocaleString();
-  let lista=document.getElementById("ticketProductos");
-  lista.innerHTML="";
-  carrito.forEach(item=>{
-    let li=document.createElement("li");
-    li.textContent=`${item.nombre} x${item.cantidad} = $${item.subtotal}`;
+  document.getElementById("ticketFecha").textContent = "Fecha: " + new Date().toLocaleString();
+
+  let lista = document.getElementById("ticketProductos");
+  lista.innerHTML = "";
+  carrito.forEach(item => {
+    let li = document.createElement("li");
+    li.textContent = `${item.nombre} x${item.cantidad} = $${item.subtotal}`;
     lista.appendChild(li);
   });
-  document.getElementById("ticketTotal").textContent="TOTAL: $"+total;
+
+  document.getElementById("ticketTotal").textContent = "TOTAL: $" + total;
 }
-function cerrarTicket(){
+function cerrarTicket() {
   document.getElementById("ticket").classList.add("hidden");
   document.getElementById("dashboard").classList.remove("hidden");
 }
-function descargarTicket(){
+function descargarTicket() {
   const ticketDiv = document.getElementById("ticket");
   const ticketHtml = ticketDiv.cloneNode(true);
   ticketHtml.querySelectorAll('button').forEach(btn => btn.remove());
+
   const html = `
 <!DOCTYPE html>
 <html lang="es">
@@ -178,10 +187,11 @@ ${ticketHtml.innerHTML}
 }
 
 /* ===== CAJA ===== */
-function actualizarEstadoCaja(){
+function actualizarEstadoCaja() {
   const estado = document.getElementById("estadoCaja");
-  if(!estado) return;
-  if(caja.abierta){
+  if (!estado) return;
+
+  if (caja.abierta) {
     estado.innerHTML = `
       🟢 Caja ABIERTA<br>
       💵 Apertura: $${caja.apertura}<br>
@@ -194,29 +204,34 @@ function actualizarEstadoCaja(){
     `;
   }
 }
-function abrirCajaVista(){ 
+function abrirCajaVista() { 
   document.getElementById("dashboard").classList.add("hidden"); 
   document.getElementById("caja").classList.remove("hidden"); 
   actualizarEstadoCaja(); 
 }
-function volverACaja(){ 
+function volverACaja() { 
   document.getElementById("caja").classList.add("hidden"); 
   document.getElementById("dashboard").classList.remove("hidden"); 
 }
-function abrirCaja(){
-  let m=Number(document.getElementById("montoApertura").value);
-  if(!m){ alert("Ingresa monto de apertura"); return; }
-  caja.abierta=true; caja.apertura=m; caja.cierre=0; caja.fecha = fechaISO();
-  localStorage.setItem("caja",JSON.stringify(caja)); 
+function abrirCaja() {
+  let m = Number(document.getElementById("montoApertura").value);
+  if (!m) { alert("Ingresa monto de apertura"); return; }
+
+  caja.abierta = true;
+  caja.apertura = m;
+  caja.cierre = 0;
+  caja.fecha = fechaISO();
+  localStorage.setItem("caja", JSON.stringify(caja));
   actualizarEstadoCaja();
 }
-function cerrarCaja(){
-  if(!caja.abierta){ alert("La caja no está abierta"); return; }
+function cerrarCaja() {
+  if (!caja.abierta) { alert("La caja no está abierta"); return; }
+
   const hoy = fechaISO();
   const yaCerrado = historialCierres.find(c => c.fecha === hoy);
   if (yaCerrado) { alert("⚠️ La caja de hoy ya fue cerrada"); return; }
 
-  caja.abierta = false; 
+  caja.abierta = false;
   caja.cierre = caja.apertura + caja.ventas;
   localStorage.setItem("caja", JSON.stringify(caja));
   actualizarEstadoCaja();
@@ -242,18 +257,18 @@ function mostrarReporteDiario() {
   if (ventasHoy.length === 0) {
     document.getElementById("reporteActual").textContent = "No hay ventas registradas hoy";
     document.getElementById("resumenDiario").textContent = "";
-    return;
+  } else {
+    let totalVentas = ventasHoy.reduce((sum, v) => sum + v.ventas, 0);
+    document.getElementById("reporteActual").textContent = `Ventas totales hoy: $${totalVentas}`;
+
+    let detalle = "Detalle de ventas:\n";
+    ventasHoy.forEach(v => {
+      detalle += `Usuario: ${v.usuario} - Ventas: $${v.ventas}\n`;
+    });
+    document.getElementById("resumenDiario").textContent = detalle;
   }
 
-  let totalVentas = ventasHoy.reduce((sum, v) => sum + v.ventas, 0);
-  document.getElementById("reporteActual").textContent = `Ventas totales hoy: $${totalVentas}`;
-
-  let detalle = "Detalle de ventas:\n";
-  ventasHoy.forEach(v => {
-    detalle += `Usuario: ${v.usuario} - Ventas: $${v.ventas}\n`;
-  });
-  document.getElementById("resumenDiario").textContent = detalle;
-
+  // Historial de cierres
   const historialUl = document.getElementById("historialReportes");
   historialUl.innerHTML = "";
   historialCierres.forEach(c => {
@@ -264,7 +279,6 @@ function mostrarReporteDiario() {
 }
 
 function abrirReportes() {
-  alert("✅ Funciona el botón de reportes");
   document.getElementById("dashboard").classList.add("hidden");
   document.getElementById("reportes").classList.remove("hidden");
   mostrarReporteDiario();
@@ -279,17 +293,11 @@ function descargarInformeDiario() {
   const hoy = fechaISO();
   const ventasHoy = historial.filter(h => h.fecha === hoy);
 
-  if (ventasHoy.length === 0) {
-    alert("No hay ventas registradas hoy");
-    return;
-  }
+  if (ventasHoy.length === 0) { alert("No hay ventas registradas hoy"); return; }
 
   let contenido = `Reporte diario - ${hoy}\n\n`;
   let totalVentas = 0;
-  ventasHoy.forEach(v => {
-    contenido += `Usuario: ${v.usuario} - Ventas: $${v.ventas}\n`;
-    totalVentas += v.ventas;
-  });
+  ventasHoy.forEach(v => { contenido += `Usuario: ${v.usuario} - Ventas: $${v.ventas}\n`; totalVentas += v.ventas; });
   contenido += `\nTotal ventas del día: $${totalVentas}\n\n`;
 
   contenido += "Historial de cierres:\n";
@@ -320,17 +328,13 @@ function verResumenPorDia() {
 
   let resumen = `Resumen de ventas - ${fecha}\n\n`;
   let total = 0;
-  ventasDia.forEach(v => {
-    resumen += `Usuario: ${v.usuario} - Ventas: $${v.ventas}\n`;
-    total += v.ventas;
-  });
+  ventasDia.forEach(v => { resumen += `Usuario: ${v.usuario} - Ventas: $${v.ventas}\n`; total += v.ventas; });
   resumen += `\nTotal ventas: $${total}`;
-
   document.getElementById("resultadoResumenDia").textContent = resumen;
 }
 
 /* ===== CIERRE DE SESIÓN ===== */
-function cerrarSesion(){
+function cerrarSesion() {
   usuarioActivo = null;
   document.getElementById("dashboard").classList.add("hidden");
   document.getElementById("inventario").classList.add("hidden");
@@ -359,4 +363,4 @@ if ('serviceWorker' in navigator) {
       console.log("Service Worker registrado correctamente");
     })
     .catch(err => console.log('Error SW:', err));
-
+}
