@@ -1,113 +1,98 @@
 <!DOCTYPE html>
 <html lang="es">
 <head>
-  <meta charset="UTF-8">
-  <title>Sistema POS</title>
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <link rel="stylesheet" href="style.css">
-  <link rel="manifest" href="manifest.json">
-  <meta name="theme-color" content="#007bff">
+<meta charset="UTF-8">
+<title>Sistema POS</title>
+<style>
+  body { font-family: Arial, sans-serif; background: #0f0f0f; color: white; margin:0; padding:20px;}
+  .hidden { display:none; }
+  header { font-size: 1.5em; margin-bottom: 20px; }
+  .menu { display: flex; gap: 10px; flex-wrap: wrap; }
+  .card { background:#222; padding:20px; cursor:pointer; border-radius:8px; text-align:center; flex:1 1 120px;}
+  button { padding:5px 10px; margin:5px; cursor:pointer; }
+  .box { background:#222; padding:15px; margin:10px 0; border-radius:8px; }
+  input, select { padding:5px; margin:5px 0; }
+  ul { list-style:none; padding-left:0; }
+</style>
 </head>
 <body>
 
-  <!-- LOGIN -->
-  <div id="login" class="box">
-    <h2 style="text-align:center">Sistema POS</h2>
-    <input id="usuario" placeholder="Usuario">
-    <input id="clave" type="password" placeholder="Contraseña">
-    <button onclick="login()">Ingresar</button>
-  </div>
+<!-- LOGIN -->
+<div id="login">
+  <header>Iniciar Sesión</header>
+  <input type="text" id="usuario" placeholder="Usuario"><br>
+  <input type="password" id="clave" placeholder="Clave"><br>
+  <button onclick="login()">Ingresar</button>
+</div>
 
-  <!-- DASHBOARD -->
-  <div id="dashboard" class="hidden">
-    <header>Sistema POS</header>
-    <button class="logout" onclick="cerrarSesion()">Cerrar sesión</button>
-    <div class="menu">
-      <div class="card" onclick="abrirInventario()">📦 Inventario</div>
-      <div class="card" onclick="abrirVentas()">🧾 Ventas</div>
-      <div class="card" onclick="abrirCajaVista()">💰 Caja</div>
-      <div class="card" onclick="abrirReportes()">📊 Reportes</div>
-    </div>
+<!-- DASHBOARD -->
+<div id="dashboard" class="hidden">
+  <header>Sistema POS</header>
+  <button class="logout" onclick="cerrarSesion()">Cerrar sesión</button>
+  <div class="menu">
+    <div class="card" onclick="abrirInventario()">📦 Inventario</div>
+    <div class="card" onclick="abrirVentas()">🧾 Ventas</div>
+    <div class="card" onclick="abrirCajaVista()">💰 Caja</div>
+    <div class="card" onclick="abrirReportes()">📊 Reportes</div>
   </div>
+  <div id="estadoCaja" class="box"></div>
+</div>
 
-  <!-- INVENTARIO -->
-  <div id="inventario" class="hidden">
-    <header>Inventario <span style="float:right;cursor:pointer" onclick="volver()">⬅</span></header>
-    <div class="box">
-      <input id="nombre" placeholder="Producto">
-      <input id="precio" type="number" placeholder="Precio">
-      <input id="stock" type="number" placeholder="Stock">
-      <button onclick="agregarProducto()">Agregar</button>
-    </div>
-    <div class="box">
-      <h3>Lista de productos</h3>
-      <ul id="lista"></ul>
-    </div>
+<!-- INVENTARIO -->
+<div id="inventario" class="hidden">
+  <header>Inventario <span style="float:right; cursor:pointer" onclick="volverInventario()">⬅</span></header>
+  <div class="box">
+    <input id="nombre" placeholder="Nombre producto">
+    <input id="precio" placeholder="Precio" type="number">
+    <input id="stock" placeholder="Stock" type="number">
+    <button onclick="agregarProducto()">Agregar producto</button>
   </div>
+  <ul id="lista"></ul>
+</div>
 
-  <!-- VENTAS -->
-  <div id="ventas" class="hidden">
-    <header>Ventas <span style="float:right;cursor:pointer" onclick="volverVentas()">⬅</span></header>
-    <div class="box">
-      <select id="productoVenta"></select>
-      <input id="cantidadVenta" type="number" placeholder="Cantidad" min="1">
-      <button onclick="agregarAlCarrito()">Agregar</button>
-    </div>
-    <div class="box">
-      <h3>Carrito</h3>
-      <ul id="carritoLista"></ul>
-      <p id="totalVenta">Total: $0</p>
-      <button onclick="finalizarVenta()">Cobrar</button>
-    </div>
+<!-- VENTAS -->
+<div id="ventas" class="hidden">
+  <header>Ventas <span style="float:right; cursor:pointer" onclick="volverVentas()">⬅</span></header>
+  <div class="box">
+    <select id="productoVenta"></select><br>
+    <input id="cantidadVenta" type="number" placeholder="Cantidad">
+    <button onclick="agregarAlCarrito()">Agregar al carrito</button>
   </div>
+  <ul id="carritoLista"></ul>
+  <div id="totalVenta"></div>
+  <button onclick="finalizarVenta()">Finalizar venta</button>
+</div>
 
-  <!-- CAJA -->
-  <div id="caja" class="hidden">
-    <header>Caja diaria <span style="float:right;cursor:pointer" onclick="volverACaja()">⬅</span></header>
-    <div class="box">
-      <p id="estadoCaja"></p>
-      <input id="montoApertura" type="number" placeholder="Monto apertura">
-      <button onclick="abrirCaja()">Abrir caja</button>
-      <hr style="margin:20px 0; border-color:#333">
-      <input id="montoCierre" type="number" placeholder="Monto cierre">
-      <button onclick="cerrarCaja()">Cerrar caja</button>
-    </div>
+<!-- TICKET -->
+<div id="ticket" class="hidden">
+  <header>Ticket <span style="float:right; cursor:pointer" onclick="cerrarTicket()">⬅</span></header>
+  <div id="ticketFecha"></div>
+  <ul id="ticketProductos"></ul>
+  <div id="ticketTotal"></div>
+  <button onclick="descargarTicket()">Descargar ticket</button>
+</div>
+
+<!-- CAJA -->
+<div id="caja" class="hidden">
+  <header>Caja <span style="float:right; cursor:pointer" onclick="volverACaja()">⬅</span></header>
+  <div class="box">
+    <input id="montoApertura" type="number" placeholder="Monto apertura">
+    <button onclick="abrirCaja()">Abrir caja</button>
+    <button onclick="cerrarCaja()">Cerrar caja</button>
   </div>
-
-  <!-- TICKET -->
-  <div id="ticket" class="hidden">
-    <div class="box">
-      <h3 style="text-align:center">Sistema POS</h3>
-      <p id="ticketFecha"></p>
-      <hr>
-      <ul id="ticketProductos"></ul>
-      <hr>
-      <p id="ticketTotal"></p>
-      <button onclick="descargarTicket()">📄 Guardar ticket</button>
-      <button onclick="cerrarTicket()">Cerrar</button>
-    </div>
-  </div>
-
-<!-- BOTÓN PARA ABRIR REPORTES -->
-<button onclick="abrirReportes()">📊 Abrir reportes</button>
+</div>
 
 <!-- REPORTES -->
 <div id="reportes" class="hidden">
-  <header>
-    Reporte diario
-    <span style="float:right; cursor:pointer" onclick="volverReportes()">⬅</span>
-  </header>
+  <header>Reporte diario <span style="float:right; cursor:pointer" onclick="volverReportes()">⬅</span></header>
 
   <div class="box">
     <h3>Resumen de caja</h3>
-    <p id="reporteActual"></p> <!-- Resumen rápido de ventas del día -->
-
-    <div class="box">
-      <button onclick="descargarInformeDiario()">📄 Descargar informe diario</button>
-    </div>
+    <p id="reporteActual"></p>
+    <button onclick="descargarInformeDiario()">📄 Descargar informe diario</button>
   </div>
 
-  <div class="resumen-dia">
+  <div class="resumen-dia box">
     <h3>📅 Resumen por día</h3>
     <input type="date" id="fechaResumen">
     <button onclick="verResumenPorDia()">Ver resumen</button>
@@ -115,22 +100,14 @@
   </div>
 
   <div class="box">
-    <div id="resumenDiario"></div> <!-- Detalle de ventas del día -->
-    <h3>Historial</h3>
-    <ul id="historialReportes"></ul> <!-- Lista de cierres -->
+    <h3>Detalle de ventas del día</h3>
+    <div id="resumenDiario"></div>
+    <h3>Historial de cierres</h3>
+    <ul id="historialReportes"></ul>
   </div>
 </div>
 
-  <!-- SCRIPTS -->
-  <script src="script.js"></script>
-  
-  <script>
-if ("serviceWorker" in navigator) {
-  navigator.serviceWorker.register("sw.js")
-    .then(() => console.log("Service Worker registrado"))
-    .catch(err => console.log("Error SW:", err));
-}
-</script>
+<script src="script.js"></script>
 
 </body>
 </html>
