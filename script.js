@@ -264,6 +264,7 @@ function mostrarReporteDiario() {
 }
 
 function abrirReportes() {
+  alert("✅ Funciona el botón de reportes");
   document.getElementById("dashboard").classList.add("hidden");
   document.getElementById("reportes").classList.remove("hidden");
   mostrarReporteDiario();
